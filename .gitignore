@@ -1,0 +1,6 @@
+.tmp
+.idea
+*.pyc
+dist
+bower_components
+node_modules

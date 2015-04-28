@@ -1,0 +1,8 @@
+{
+  "db": {
+      "username" : "root",
+      "password": "wp1986dl",
+      "name": "share_market",
+      "host": "localhost"
+  }
+}

@@ -1,0 +1,84 @@
+<div class="form-horizontal">
+    <div class="form-group">
+        <label for="fund" class="col-sm-3 col-md-3 control-label">选择开放式基金</label>
+        <div class="col-sm-9">
+            <ui-select ng-model="fund.selected" theme="bootstrap" ng-disabled="disabled" reset-search-input="false" style="width: 300px">
+                <ui-select-match placeholder="输入代码，拼音">{{ $select.selected.name }}</ui-select-match>
+                <ui-select-choices repeat="fund in fund_availiable track by $index"
+                         refresh="refreshFunds($select.search)"
+                         refresh-delay="1000">
+                  <div ng-bind-html="fund.name | highlight: $select.search"></div>
+                </ui-select-choices>
+            </ui-select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="started" class="col-sm-3 col-md-3 control-label">开始持有日期</label>
+        <div class="col-sm-9">
+         <p class="input-group">
+              <input type="text" class="form-control" id="started" ng-disabled="!fund.selected"
+                     datepicker-popup="yyyy-MM-dd" ng-model="fund.dt_started" is-open="opened.started"
+                     datepicker-options="dateOptions"
+                     max-date="fund.selected.last_date"
+                     date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" />
+              <span class="input-group-btn">
+                    <button type="button" class="btn btn-default" ng-click="open($event,'started')"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+          </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="released" class="col-sm-3 col-md-3 control-label">结束持有日期</label>
+        <div class="col-sm-9">
+          <p class="input-group">
+          <input type="text" class="form-control" id="released" ng-disabled="!fund.dt_started"
+                 datepicker-popup="yyyy-MM-dd" ng-model="fund.dt_released" is-open="opened.released"
+                 datepicker-options="dateOptions"
+                 max-date="fund.selected.last_date" min-date="fund.dt_started"
+                 date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" />
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default" ng-click="open($event,'released')"><i class="glyphicon glyphicon-calendar"></i></button>
+                  </span>
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="released" class="col-sm-3 col-md-3 control-label">申购金额</label>
+        <div class="col-sm-9 col-md-9">
+          <p class="input-group">
+          <input min="0" step="1000" type="number" ng-disabled="!fund.selected" class="form-control" id="buy_amount" ng-model="fund.buy_amount" ng-required="true" />
+            <span class="input-group-addon">元</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="released" class="col-sm-3 col-md-3 control-label">申购费率</label>
+        <div class="col-sm-9 col-md-9">
+          <p class="input-group">
+          <input tooltip-placement="bottom" ng-disabled="!fund.selected" tooltip="{{ fund.selected.buy_2 }}" min="0" max="100" step="0.1" type="number" class="form-control" ng-model="fund.buy_rate" ng-required="true" />
+            <span class="input-group-addon">%</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="released" class="col-sm-3 col-md-3 control-label">赎回费率</label>
+        <div class="col-sm-9 col-md-9">
+          <p class="input-group">
+          <input tooltip-placement="bottom" ng-disabled="!fund.selected" tooltip="{{ fund.selected.sell }}" type="number" min="0" max="100" step="0.1" class="form-control" id="sell_rate" ng-model="fund.sell_rate" ng-required="true" />
+            <span class="input-group-addon">%</span>
+            </p>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-md-offset-3 col-sm-9 col-md-9">
+            <a ui-sref="calculator.result({share_code: fund.selected.code})">
+                <button type="submit" class="btn btn-lg btn-success" ng-disabled="!fund.selected || !fund.sell_rate || !fund.buy_rate || !fund.buy_amount || !fund.dt_started || !fund.dt_released">计算</button>
+                </a>
+            <button type="submit" ng-click="clear_all()" class="btn btn-lg btn-default">清除</button>
+        </div>
+    </div>
+</div>
