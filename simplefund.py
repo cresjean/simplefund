@@ -3,7 +3,9 @@ __author__ = 'crespo'
 # from werkzeug.contrib.cache import SimpleCache
 import pylibmc as memcache
 from flask import Flask
+import flask
 from flask.ext import restful
+import functools
 from flask.ext.restful import reqparse, marshal_with, fields
 import logging
 import data
@@ -28,59 +30,85 @@ price_fields = {
 }
 
 
+
+fund_field = {
+    'code': fields.String,
+    'name': fields.String,
+    'managed': fields.String,
+    'buy_1': fields.String,
+    'buy_2': fields.String,
+    'sell': fields.String,
+    'last_date': fields.DateTime(dt_format='iso8601')
+}
+
+
 share_fields = {
-    'data': fields.Nested(
-        {
-            'code': fields.String,
-            'name': fields.String,
-            'managed': fields.String,
-            'buy_1': fields.String,
-            'buy_2': fields.String,
-            'sell': fields.String,
-            'last_date': fields.DateTime(dt_format='iso8601')
-        }
-    ),
+    'data': fields.Nested(fund_field),
     'index': fields.Raw
 }
 
 class Shares(restful.Resource):
+
     @marshal_with(share_fields, envelope='response')
     def get(self):
-        data_return = cache.get("all_sharess")
-        if data_return is None:
-            db = data.get_db()
-            cursor = db.cursor()
-            cursor.execute("SELECT i.*, p.last_date FROM share_info i join ( SELECT share_code, MAX(date) as last_date FROM share_price GROUP BY share_code) p ON p.share_code = i.code")
-            shares = cursor.fetchall()
-            all_shares = []
-            index_shares = {}
-            for share in shares:
+        all_fund = cache.get("all_sharess")
+        if all_fund is None:
+            all_fund = self._get_all_fund()
+        else:
+            logging.debug("Return from memcache")
+        return {'data': all_fund.get('data'), 'index': all_fund.get('index')}
 
-                all_shares.append(
-                    {
-                        "code": share[1],
-                        "name": share[2],
-                        "managed": share[3],
-                        "buy_1": share[4],
-                        "buy_2": share[5],
-                        "sell": share[6],
-                        "pinyin": share[7],
-                        "last_date": share[8],
-                    }
-                )
-                index_shares[share[7]] = len(all_shares) - 1
-                index_shares[share[1]] = len(all_shares) - 1
+    def _get_all_fund(self):
+        db = data.get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT i.*, p.last_date FROM share_info i join ( SELECT share_code, MAX(date) as last_date FROM share_price GROUP BY share_code) p ON p.share_code = i.code")
+        shares = cursor.fetchall()
+        all_shares = []
+        index_shares = {}
+        for share in shares:
 
-            data_return = {"index": index_shares, "data": all_shares}
-            cache.set("all_sharess", data_return)
-            logging.debug("Return from DB")
-            db.commit()
-            db.close()
+            all_shares.append(
+                {
+                    "code": share[1],
+                    "name": share[2],
+                    "managed": share[3],
+                    "buy_1": share[4],
+                    "buy_2": share[5],
+                    "sell": share[6],
+                    "pinyin": share[7],
+                    "last_date": share[8],
+                }
+            )
+            index_shares[share[7]] = len(all_shares) - 1
+            index_shares[share[1]] = len(all_shares) - 1
+
+        all_fund = {"index": index_shares, "data": all_shares}
+        cache.set("all_sharess", all_fund)
+        logging.debug("Return from DB")
+        db.commit()
+        db.close()
+        return all_fund
+
+
+class SharesSearch(Shares):
+
+    @marshal_with(fund_field, envelope='response')
+    def get(self, share_key):
+        all_fund = cache.get("all_sharess")
+        if all_fund is None:
+            all_fund= self._get_all_fund()
         else:
             logging.debug("Return from memcache")
 
-        return data_return
-
+        indexes = all_fund.get('index')
+        funds = all_fund.get('data')
+        matched = []
+        logging.debug(indexes)
+        for key, value in indexes.iteritems():
+            if share_key in key:
+                matched.append(funds[value])
+        logging.debug(matched)
+        return matched
 
 class Price(restful.Resource):
     @marshal_with(price_fields, envelope='response')
@@ -141,7 +169,9 @@ class Share(restful.Resource):
 
 
 api.add_resource(Share, '/api/share/<string:share_q>', '/dev/api/share/<string:share_q>')
-api.add_resource(Shares, '/api/shares', '/dev/api/shares')
+api.add_resource(SharesSearch, '/api/shares/<string:share_key>', endpoint="share_search")
+api.add_resource(Shares, '/api/shares',  endpoint="share_get")
+
 api.add_resource(Price, '/api/share/<string:share_id>/price', '/dev/api/share/<string:share_id>/price')
 
 parser.add_argument('rate', type=str, help='Rate to charge for this resource')

@@ -17,7 +17,8 @@ angular
     'ngTouch',
         'ui.router',
         'ui.bootstrap',
-        'ui.select'
+        'ui.select',
+        'restangular'
   ])
   .config(function ($stateProvider, $urlRouterProvider) {
         $urlRouterProvider.otherwise("/");
@@ -34,9 +35,10 @@ angular
                 templateUrl: 'views/main.html',
                 controller: 'MainCtrl',
                 resolve: {
-                    shares: function($resource){
-                        var share = $resource('api/shares');
-                        return share.get().$promise;
+                    shares: function($log, $resource, Restangular){
+                        return Restangular.one('api/shares').get();
+                        //var share = $resource('api/shares');
+                        //return share.get().$promise;
 
                     }
                 }

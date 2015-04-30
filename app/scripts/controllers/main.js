@@ -10,8 +10,7 @@
 angular.module('shareMarketApp')
   .controller('MainCtrl', function ($scope, $log, $resource, shares) {
         $log.debug("MainCtrl");
-        //var share = $resource('api/share/:share_id', {share_id:'@id'});
-        //var share = $resource('api/shares');
+
         $scope.disabled = undefined;
         $scope.fund_availiable = [];
         $scope.index_funds = shares.response.index;
