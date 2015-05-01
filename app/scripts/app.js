@@ -33,15 +33,13 @@ angular
           .state('calculator.input', {
                 url: "/",
                 templateUrl: 'views/main.html',
-                controller: 'MainCtrl',
-                resolve: {
-                    shares: function($log, $resource, Restangular){
-                        return Restangular.one('api/shares').get();
-                        //var share = $resource('api/shares');
-                        //return share.get().$promise;
-
-                    }
-                }
+                controller: 'MainCtrl'
+                //resolve: {
+                //    shares: function($log, $resource, Restangular){
+                //        return Restangular.one('api/shares').get();
+                //
+                //    }
+                //}
           })
             .state('calculator.result', {
                 url: "^/:share_code/result",

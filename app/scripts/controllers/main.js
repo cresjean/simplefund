@@ -8,13 +8,11 @@
  * Controller of the shareMarketApp
  */
 angular.module('shareMarketApp')
-  .controller('MainCtrl', function ($scope, $log, $resource, shares) {
+  .controller('MainCtrl', function ($scope, $log, fundQuery) {
         $log.debug("MainCtrl");
 
         $scope.disabled = undefined;
         $scope.fund_availiable = [];
-        $scope.index_funds = shares.response.index;
-        $scope.data_funds = shares.response.data;
         $scope.enable = function() {
             $scope.disabled = false;
         };
@@ -39,14 +37,10 @@ angular.module('shareMarketApp')
             }
             else
             {
-                $scope.fund_availiable = [];
-                for (var key in $scope.index_funds) {
-                    if (key.indexOf(fund_q) >= 0) {
-                        $scope.fund_availiable.push($scope.data_funds[$scope.index_funds[key]]);
-                    }
-                }
+                fundQuery.query(fund_q).then(function(response){
+                    $scope.fund_availiable = response.response;
+                });
             }
-
           };
 
         $scope.open = function($event, field) {
@@ -106,4 +100,12 @@ angular.module('shareMarketApp')
                 }
             });
         }
+    })
+    .factory('fundQuery', function($log, Restangular){
+        return {
+            query: function(q) {
+                return Restangular.one('api/shares',q).get();
+            }
+        }
     });
+;

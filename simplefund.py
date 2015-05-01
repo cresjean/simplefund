@@ -29,8 +29,6 @@ price_fields = {
     'price': fields.Float
 }
 
-
-
 fund_field = {
     'code': fields.String,
     'name': fields.String,
@@ -96,18 +94,18 @@ class SharesSearch(Shares):
     def get(self, share_key):
         all_fund = cache.get("all_sharess")
         if all_fund is None:
-            all_fund= self._get_all_fund()
+            all_fund = self._get_all_fund()
         else:
             logging.debug("Return from memcache")
 
         indexes = all_fund.get('index')
         funds = all_fund.get('data')
         matched = []
-        logging.debug(indexes)
+
         for key, value in indexes.iteritems():
             if share_key in key:
                 matched.append(funds[value])
-        logging.debug(matched)
+
         return matched
 
 class Price(restful.Resource):
