@@ -6,8 +6,6 @@ import sae.const
 import logging
 logging.basicConfig(level="DEBUG")
 
-
-
 if os.environ.get("SERVER_SOFTWARE") is None:
     with open("conf.json", 'r') as conf_f:
         conf = json.load(conf_f)
